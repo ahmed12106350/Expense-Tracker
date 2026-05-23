@@ -1,12 +1,12 @@
 const jwt = require('jsonwebtoken')
 
 
-const authMiddleware = (req, res, next => {
-    const authHeader = req.headers['authorisation']
+const authMiddleware = (req, res, next) => {
+    const authHeader = req.headers['authorization']  // ✅ American spelling
     const token = authHeader && authHeader.split(' ')[1]
 
     if (!token) {
-        return res.statu(401).json({ error: 'No token provided' })
+        return res.status(401).json({ error: 'No token provided' })
     }
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
@@ -17,6 +17,6 @@ const authMiddleware = (req, res, next => {
         return res.status(403).json({ error: 'Invalid pr expired token' })
     }
 }
-)
+
 
 module.exports = authMiddleware
