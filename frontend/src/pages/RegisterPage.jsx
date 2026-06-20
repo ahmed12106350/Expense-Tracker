@@ -2,44 +2,42 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 
-function LoginPage() {
+function RegisterPage() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const navigate = useNavigate()
 
-    const handleLogin = async () => {
+    const RegisterLogin = async () => {
         try {
-            const response = await api.post('/auth/login', { email, password })
-            localStorage.setItem('token', response.data.token)
-            navigate('/dashboard')
+            const response = await api.post('/auth/register', { email, password })
+
+            navigate('/login')
         } catch (err) {
-            setError(err.response?.data?.error || 'Invalid email or password')
+            setError(err.response?.data?.error || 'Something went wrong')
         }
     }
 
     return (
         <div>
-            <h1>Login</h1>
+            <h1>Register</h1>
             <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
-                autoComplete='off'
             />
             <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
-                autoComplete='new-password'
             />
             {error && <p>{error}</p>}
-            <button onClick={handleLogin}>Login</button>
-            <p>No account? <a href="/register">Register</a></p>
+            <button onClick={RegisterLogin}>Register</button>
+            <p>Already have an account?<a href="/login">Login</a></p>
         </div>
     )
 }
 
-export default LoginPage
+export default RegisterPage
