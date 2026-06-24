@@ -569,3 +569,291 @@ select.form-input {
     padding: 28px 20px;
   }
 }
+
+/* ══════════════════════════════════════════════════
+   TransactionsPage
+══════════════════════════════════════════════════ */
+
+/* Full-page layout */
+.tx-page {
+  min-height: 100vh;
+  background: var(--bg);
+  transition: background var(--transition);
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px 48px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ── Header bar ─────────────────────────────────── */
+.tx-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.tx-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tx-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tx-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-h);
+  letter-spacing: -0.6px;
+}
+
+.tx-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ── Back button ────────────────────────────────── */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
+  width: fit-content;
+}
+
+.btn-back:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateX(-2px);
+}
+
+/* ── Add button ─────────────────────────────────── */
+.btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  white-space: nowrap;
+}
+
+.btn-add:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+}
+
+/* ── Body ───────────────────────────────────────── */
+.tx-body {
+  flex: 1;
+}
+
+/* ── State boxes (loading / error / empty) ────── */
+.tx-state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 80px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.tx-state-text {
+  font-size: 15px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Loading spinner (large) */
+.tx-spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+/* Mini spinner for delete button */
+.tx-mini-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  border-top-color: var(--danger);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* ── Transaction list ───────────────────────────── */
+.tx-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tx-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition);
+  animation: fadeIn 0.25s ease;
+}
+
+.tx-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Fading out while delete request is in flight */
+.tx-item--fading {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* Category icon badge */
+.tx-icon-badge {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  transition: background var(--transition);
+}
+
+.tx-item:hover .tx-icon-badge {
+  background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.12));
+}
+
+/* Description + date */
+.tx-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.tx-desc {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tx-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Amount */
+.tx-amount {
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: -0.3px;
+}
+
+/* Delete button */
+.btn-delete {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  color: var(--text-muted);
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: var(--danger);
+  transform: scale(1.1);
+}
+
+.btn-delete:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ── Responsive tweaks ────────────────────────── */
+@media (max-width: 540px) {
+  .tx-page {
+    padding: 20px 14px 40px;
+  }
+
+  .tx-title {
+    font-size: 22px;
+  }
+
+  .tx-item {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .tx-icon-badge {
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+  }
+
+  .tx-amount {
+    font-size: 14px;
+  }
+
+  .tx-header {
+    align-items: flex-start;
+  }
+}
