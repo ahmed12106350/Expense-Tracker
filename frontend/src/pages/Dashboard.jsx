@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 
 function Dashboard() {
     const [transactions, setTransactions] = useState([])
+    const navigate = useNavigate()
 
     useEffect(() => {
         const fetchTransactions = async () => {
@@ -17,15 +19,18 @@ function Dashboard() {
     }, [])
 
     return (
-        <div className="page-wrapper" style={{ padding: 24 }}>
-            <h1 style={{ color: 'var(--text-h)', fontSize: 28, fontWeight: 700, marginBottom: 16 }}>Dashboard</h1>
-            <ul style={{ listStyle: 'none', padding: 0 }}>
+        <div>
+            <h1>Dashboard</h1>
+            <button onClick={() => navigate('/add')}>+ Add Transaction</button>
+            <button onClick={() => navigate('/transactions')}>View All Transactions</button>
+            <ul>
                 {transactions.map((t) => (
-                    <li key={t.id} style={{ padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 10, marginBottom: 8, border: '1px solid var(--border)', color: 'var(--text-h)' }}>
+                    <li key={t.id}>
                         {t.category_icon} {t.description} — ₹{t.amount}
                     </li>
                 ))}
             </ul>
+            <h1 className="text-3xl font-bold text-indigo-600">Dashboard</h1>
         </div>
     )
 }
