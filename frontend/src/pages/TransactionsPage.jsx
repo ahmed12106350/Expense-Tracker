@@ -53,6 +53,17 @@ function TransactionsPage() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
 
+            {/* Navbar */}
+            <nav className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between">
+                <div onClick={() => navigate('/dashboard')} className="flex items-center gap-2 cursor-pointer">
+                    <span className="text-2xl">💰</span>
+                    <span className="text-lg font-bold text-gray-900 dark:text-white hover:text-indigo-600 transition">ExpenseTracker</span>
+                </div>
+                <button onClick={() => navigate('/dashboard')} className="text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-indigo-600 transition">
+                    ← Back
+                </button>
+            </nav>
+
             {/* Header */}
             <div className="max-w-3xl mx-auto px-6 py-8">
                 <div className="flex items-center justify-between mb-6">
