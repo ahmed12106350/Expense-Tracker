@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('../db/pool');
+const authMiddleware = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // Register
@@ -41,4 +42,9 @@ router.post('/login', async (req, res) => {
     }
 });
 
-module.exports = router;
+// Verify token — used by frontend on app load to check if stored token is still valid
+router.get('/me', authMiddleware, (req, res) => {
+    res.json({ userId: req.userId });
+});
+
+module.exports = router;

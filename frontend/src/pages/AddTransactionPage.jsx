@@ -1,222 +1,197 @@
-import { useState, useEffect } from 'react';
-import api from '../api/axios';
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import api from '../api/axios'
 
-function AddTransactionPage() {
-    const [amount, setAmount] = useState('');
-    const [type, setType] = useState('expense');
-    const [categoryId, setCategoryId] = useState('');
-    const [description, setDescription] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-    const [categories, setCategories] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-    const [success, setSuccess] = useState('');
-    const [error, setError] = useState('');
+export default function AddTransaction() {
+    const [amount, setAmount] = useState('')
+    const [type, setType] = useState('expense')
+    const [categoryId, setCategoryId] = useState('')
+    const [description, setDescription] = useState('')
+    const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+    const [categories, setCategories] = useState([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
+    const [success, setSuccess] = useState(false)
+    const navigate = useNavigate()
 
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await api.get('/transactions/categories');
-                const dbCategories = response.data;
-                setCategories(dbCategories);
+                const response = await api.get('/transactions/categories')
+                const dbCategories = response.data
+                setCategories(dbCategories)
                 if (dbCategories.length > 0) {
-                    setCategoryId(dbCategories[0].id);
+                    setCategoryId(dbCategories[0].id)
                 }
-            } catch (err) {
-                console.error('Failed to fetch categories:', err);
-                setError('Could not load categories. Please refresh.');
+            } catch (error) {
+                console.error(error)
             } finally {
-                setIsLoading(false);
+                setIsLoading(false)
             }
-        };
-        fetchCategories();
-    }, []);
+        }
+        fetchCategories()
+    }, [])
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSubmitting(true);
-        setError('');
-        setSuccess('');
-
+        e.preventDefault()
+        setSaving(true)
         try {
             await api.post('/transactions', {
                 amount: parseFloat(amount),
                 type,
                 category_id: categoryId,
                 description,
-                date,
-            });
-            setSuccess('Transaction saved successfully!');
-            setAmount('');
-            setDescription('');
-            setDate(new Date().toISOString().split('T')[0]);
-        } catch (err) {
-            setError(err.response?.data?.error || 'Failed to save transaction.');
+                date
+            })
+            setSuccess(true)
+            setAmount('')
+            setDescription('')
+            setTimeout(() => {
+                navigate('/dashboard')
+            }, 1000)
+        } catch (error) {
+            console.error(error)
         } finally {
-            setSubmitting(false);
+            setSaving(false)
         }
-    };
-
-    // Find selected category icon
-    const selectedCat = categories.find(c => String(c.id) === String(categoryId));
+    }
 
     return (
-        <div className="transaction-page">
-            <div className="transaction-card">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4 transition-colors">
+            <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-8">
+
                 {/* Header */}
-                <div className="transaction-header">
-                    <div className="transaction-header-icon">➕</div>
+                <div className="flex items-center gap-3 mb-8">
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+                    >
+                        ←
+                    </button>
                     <div>
-                        <h1>New Transaction</h1>
-                        <p>Record an income or expense</p>
+                        <h1 className="text-xl font-bold text-gray-900 dark:text-white">New Transaction</h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Record an income or expense</p>
                     </div>
                 </div>
 
-                {isLoading ? (
-                    <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
-                        <div className="spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)', margin: '0 auto 12px' }} />
-                        <p style={{ fontSize: 14 }}>Loading categories…</p>
+                {/* Success message */}
+                {success && (
+                    <div className="mb-4 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 text-sm">
+                        Transaction saved! Redirecting...
                     </div>
+                )}
+
+                {isLoading ? (
+                    <p className="text-center text-gray-400 py-8">Loading categories...</p>
                 ) : (
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} className="space-y-5">
 
-                        {/* Success / Error */}
-                        {success && (
-                            <div className="form-success">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
-                                {success}
-                            </div>
-                        )}
-                        {error && (
-                            <div className="form-error">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-                                {error}
-                            </div>
-                        )}
-
-                        {/* Type Toggle */}
-                        <div className="form-group">
-                            <label className="form-label">Transaction type</label>
-                            <div className="type-toggle">
+                        {/* Type toggle */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                Transaction type
+                            </label>
+                            <div className="grid grid-cols-2 gap-2">
                                 <button
                                     type="button"
-                                    className={`type-pill ${type === 'expense' ? 'active-expense' : ''}`}
                                     onClick={() => setType('expense')}
+                                    className={`py-2.5 rounded-xl font-semibold text-sm transition border ${type === 'expense'
+                                            ? 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 text-red-600 dark:text-red-400'
+                                            : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400'
+                                        }`}
                                 >
-                                    📉 Expense
+                                    🔴 Expense
                                 </button>
                                 <button
                                     type="button"
-                                    className={`type-pill ${type === 'income' ? 'active-income' : ''}`}
                                     onClick={() => setType('income')}
+                                    className={`py-2.5 rounded-xl font-semibold text-sm transition border ${type === 'income'
+                                            ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400'
+                                            : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400'
+                                        }`}
                                 >
-                                    📈 Income
+                                    🟢 Income
                                 </button>
                             </div>
                         </div>
 
                         {/* Amount */}
-                        <div className="form-group">
-                            <label className="form-label" htmlFor="amount">Amount</label>
-                            <div className="input-wrapper">
-                                <span className="input-icon" style={{ fontWeight: 600, fontSize: 15 }}>₹</span>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                                Amount
+                            </label>
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">₹</span>
                                 <input
-                                    id="amount"
                                     type="number"
                                     step="0.01"
-                                    min="0"
                                     required
-                                    className="form-input"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     placeholder="0.00"
-                                    style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.5px' }}
+                                    className="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
                                 />
                             </div>
                         </div>
 
                         {/* Category */}
-                        <div className="form-group">
-                            <label className="form-label" htmlFor="category">Category</label>
-                            <div className="input-wrapper">
-                                <span className="input-icon" style={{ fontSize: 16 }}>
-                                    {selectedCat?.icon || '🏷️'}
-                                </span>
-                                <select
-                                    id="category"
-                                    required
-                                    className="form-input"
-                                    value={categoryId}
-                                    onChange={(e) => setCategoryId(e.target.value)}
-                                >
-                                    {categories.map((cat) => (
-                                        <option key={cat.id} value={cat.id}>
-                                            {cat.icon} {cat.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                                Category
+                            </label>
+                            <select
+                                required
+                                value={categoryId}
+                                onChange={(e) => setCategoryId(e.target.value)}
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                            >
+                                {categories.map((cat) => (
+                                    <option key={cat.id} value={cat.id}>
+                                        {cat.icon} {cat.name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         {/* Description */}
-                        <div className="form-group">
-                            <label className="form-label" htmlFor="description">Description <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optional)</span></label>
-                            <div className="input-wrapper">
-                                <span className="input-icon">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="17" y1="10" x2="3" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="17" y1="18" x2="3" y2="18" /></svg>
-                                </span>
-                                <input
-                                    id="description"
-                                    type="text"
-                                    className="form-input"
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    placeholder="e.g. Grocery shopping"
-                                />
-                            </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                                Description (optional)
+                            </label>
+                            <input
+                                type="text"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                placeholder="e.g. Grocery shopping"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                            />
                         </div>
 
                         {/* Date */}
-                        <div className="form-group">
-                            <label className="form-label" htmlFor="date">Date</label>
-                            <div className="input-wrapper">
-                                <span className="input-icon">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
-                                </span>
-                                <input
-                                    id="date"
-                                    type="date"
-                                    required
-                                    className="form-input"
-                                    value={date}
-                                    onChange={(e) => setDate(e.target.value)}
-                                />
-                            </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                                Date
+                            </label>
+                            <input
+                                type="date"
+                                required
+                                value={date}
+                                onChange={(e) => setDate(e.target.value)}
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                            />
                         </div>
 
+                        {/* Submit */}
                         <button
                             type="submit"
-                            className="btn-primary"
-                            disabled={submitting}
-                            style={{
-                                background: type === 'income'
-                                    ? 'linear-gradient(135deg, #10b981, #059669)'
-                                    : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                                boxShadow: type === 'income'
-                                    ? '0 4px 14px rgba(16,185,129,0.35)'
-                                    : '0 4px 14px rgba(99,102,241,0.35)',
-                            }}
+                            disabled={saving}
+                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold rounded-xl transition shadow-md mt-2"
                         >
-                            {submitting
-                                ? <><span className="spinner" /> Saving…</>
-                                : `Save ${type === 'income' ? 'Income' : 'Expense'}`
-                            }
+                            {saving ? 'Saving...' : `Save ${type === 'expense' ? 'Expense' : 'Income'}`}
                         </button>
                     </form>
                 )}
             </div>
         </div>
-    );
+    )
 }
-
-export default AddTransactionPage;
