@@ -40,7 +40,12 @@ function Dashboard({ onLogout }) {
             <nav className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <span className="text-2xl">💰</span>
-                    <span className="text-lg font-bold text-gray-900 dark:text-white">ExpenseTracker</span>
+                    <span
+                        onClick={() => navigate('/dashboard')}
+                        className="text-lg font-bold text-gray-900 dark:text-white cursor-pointer hover:text-indigo-600 transition"
+                    >
+                        ExpenseTracker
+                    </span>
                 </div>
                 <button
 
