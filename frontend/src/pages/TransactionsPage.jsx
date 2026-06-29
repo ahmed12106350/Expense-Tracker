@@ -2,57 +2,25 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 
-/* ── helpers ── */
 function formatDate(dateStr) {
     if (!dateStr) return ''
     const d = new Date(dateStr)
-    return d.toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    })
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-function formatAmount(amount, type) {
-    const num = parseFloat(amount)
-    const sign = type === 'income' ? '+' : '-'
-    return `${sign}₹${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
-
-/* ── icons ── */
-const IconBack = () => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="15 18 9 12 15 6" />
-    </svg>
-)
-
-const IconTrash = () => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="3 6 5 6 21 6" />
-        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-        <path d="M10 11v6M14 11v6" />
-        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-    </svg>
-)
-
-/* ── component ── */
 function TransactionsPage() {
     const navigate = useNavigate()
-
     const [transactions, setTransactions] = useState([])
     const [loading, setLoading] = useState(true)
-    const [error, setError] = useState('')
     const [deletingId, setDeletingId] = useState(null)
 
-    /* ── fetch ── */
     const fetchTransactions = async () => {
         setLoading(true)
-        setError('')
         try {
             const res = await api.get('/transactions')
             setTransactions(res.data)
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to load transactions.')
+            console.error(err)
         } finally {
             setLoading(false)
         }
@@ -62,21 +30,18 @@ function TransactionsPage() {
         fetchTransactions()
     }, [])
 
-    /* ── delete ── */
     const handleDelete = async (id) => {
         setDeletingId(id)
         try {
             await api.delete(`/transactions/${id}`)
-            // Refresh list after successful delete
-            await fetchTransactions()
+            setTransactions(transactions.filter(t => t.id !== id))
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to delete transaction.')
+            console.error(err)
         } finally {
             setDeletingId(null)
         }
     }
 
-    /* ── summary counts ── */
     const totalIncome = transactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + parseFloat(t.amount), 0)
@@ -85,181 +50,116 @@ function TransactionsPage() {
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + parseFloat(t.amount), 0)
 
-    /* ── render ── */
     return (
-        <div className="tx-page">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
 
-            {/* ── Header ── */}
-            <div className="tx-header">
-                <div className="tx-header-left">
-                    {/* Back button */}
+            {/* Header */}
+            <div className="max-w-3xl mx-auto px-6 py-8">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => navigate('/dashboard')}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition text-lg"
+                        >
+                            ←
+                        </button>
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">All Transactions</h1>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                {transactions.length} transaction{transactions.length !== 1 ? 's' : ''} recorded
+                            </p>
+                        </div>
+                    </div>
                     <button
-                        id="btn-back-dashboard"
-                        className="btn-back"
-                        onClick={() => navigate('/dashboard')}
+                        onClick={() => navigate('/add')}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition shadow-md text-sm"
                     >
-                        <IconBack />
-                        Back to Dashboard
+                        + Add New
                     </button>
-
-                    {/* Title */}
-                    <div className="tx-title-group">
-                        <h1 className="tx-title">All Transactions</h1>
-                        <p className="tx-subtitle">
-                            {transactions.length} transaction{transactions.length !== 1 ? 's' : ''} recorded
-                        </p>
-                    </div>
                 </div>
 
-                {/* Add new */}
-                <button
-                    id="btn-add-transaction"
-                    className="btn-add"
-                    onClick={() => navigate('/add')}
-                >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                    Add New
-                </button>
-            </div>
-
-            {/* ── Summary chips ── */}
-            {!loading && transactions.length > 0 && (
-                <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-                    <div style={{
-                        padding: '8px 16px',
-                        borderRadius: 'var(--radius-sm)',
-                        background: 'rgba(16,185,129,0.08)',
-                        border: '1px solid rgba(16,185,129,0.25)',
-                        color: 'var(--success)',
-                        fontSize: 13,
-                        fontWeight: 600,
-                    }}>
-                        Income&nbsp; +₹{totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                {/* Summary chips */}
+                {!loading && transactions.length > 0 && (
+                    <div className="flex gap-3 mb-6 flex-wrap">
+                        <div className="px-4 py-2 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 text-sm font-semibold">
+                            Income +₹{totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </div>
+                        <div className="px-4 py-2 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-semibold">
+                            Expenses -₹{totalExpense.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </div>
+                        <div className="px-4 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-bold">
+                            Net {(totalIncome - totalExpense) >= 0 ? '+' : ''}₹{(totalIncome - totalExpense).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </div>
                     </div>
-                    <div style={{
-                        padding: '8px 16px',
-                        borderRadius: 'var(--radius-sm)',
-                        background: 'rgba(239,68,68,0.08)',
-                        border: '1px solid rgba(239,68,68,0.25)',
-                        color: 'var(--danger)',
-                        fontSize: 13,
-                        fontWeight: 600,
-                    }}>
-                        Expenses&nbsp; -₹{totalExpense.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </div>
-                    <div style={{
-                        padding: '8px 16px',
-                        borderRadius: 'var(--radius-sm)',
-                        background: 'var(--bg-card)',
-                        border: '1px solid var(--border)',
-                        color: (totalIncome - totalExpense) >= 0 ? 'var(--success)' : 'var(--danger)',
-                        fontSize: 13,
-                        fontWeight: 700,
-                    }}>
-                        Net&nbsp; {(totalIncome - totalExpense) >= 0 ? '+' : ''}₹{(totalIncome - totalExpense).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </div>
-                </div>
-            )}
-
-            {/* ── Error banner ── */}
-            {error && (
-                <div className="form-error" style={{ marginBottom: 20 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="8" x2="12" y2="12" />
-                        <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
-                    {error}
-                </div>
-            )}
-
-            {/* ── Body ── */}
-            <div className="tx-body">
+                )}
 
                 {/* Loading */}
                 {loading && (
-                    <div className="tx-state-box">
-                        <div className="tx-spinner" />
-                        <p className="tx-state-text">Loading transactions…</p>
+                    <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                        <div className="w-10 h-10 border-2 border-gray-200 dark:border-gray-700 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+                        <p className="text-sm">Loading transactions...</p>
                     </div>
                 )}
 
                 {/* Empty */}
-                {!loading && !error && transactions.length === 0 && (
-                    <div className="tx-state-box">
-                        <span style={{ fontSize: 40 }}>💸</span>
-                        <p className="tx-state-text">No transactions yet.<br />Add one to get started!</p>
+                {!loading && transactions.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
+                        <span className="text-4xl mb-3">💸</span>
+                        <p className="text-gray-400 text-sm mb-4">No transactions yet. Add one to get started.</p>
                         <button
-                            className="btn-add"
                             onClick={() => navigate('/add')}
-                            style={{ marginTop: 4 }}
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition"
                         >
                             + Add Transaction
                         </button>
                     </div>
                 )}
 
-                {/* List */}
+                {/* Transaction list */}
                 {!loading && transactions.length > 0 && (
-                    <ul className="tx-list">
-                        {transactions.map((t) => {
-                            const isFading = deletingId === t.id
-                            const isIncome = t.type === 'income'
-
-                            return (
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
+                        <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+                            {transactions.map((t) => (
                                 <li
                                     key={t.id}
-                                    className={`tx-item${isFading ? ' tx-item--fading' : ''}`}
+                                    className={`flex items-center gap-4 px-6 py-4 transition hover:bg-gray-50 dark:hover:bg-gray-800 ${deletingId === t.id ? 'opacity-40 pointer-events-none' : ''}`}
                                 >
-                                    {/* Category icon */}
-                                    <div className="tx-icon-badge">
+                                    {/* Icon */}
+                                    <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xl flex-shrink-0">
                                         {t.category_icon || '💰'}
                                     </div>
 
-                                    {/* Description + date */}
-                                    <div className="tx-info">
-                                        <span className="tx-desc">
-                                            {t.description || t.category || 'Transaction'}
-                                        </span>
-                                        <span className="tx-date">
-                                            {t.category && (
-                                                <span style={{ marginRight: 8, opacity: 0.7 }}>
-                                                    {t.category}
-                                                </span>
-                                            )}
-                                            {formatDate(t.created_at || t.date)}
-                                        </span>
+                                    {/* Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+                                            {t.description || 'Transaction'}
+                                        </p>
+                                        <p className="text-xs text-gray-400">
+                                            {t.category_name} · {formatDate(t.date)}
+                                        </p>
                                     </div>
 
                                     {/* Amount */}
-                                    <span
-                                        className="tx-amount"
-                                        style={{ color: isIncome ? 'var(--success)' : 'var(--danger)' }}
-                                    >
-                                        {formatAmount(t.amount, t.type)}
+                                    <span className={`font-bold text-sm ${t.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
+                                        {t.type === 'income' ? '+' : '-'}₹{parseFloat(t.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                     </span>
 
-                                    {/* Delete button */}
+                                    {/* Delete */}
                                     <button
-                                        id={`btn-delete-${t.id}`}
-                                        className="btn-delete"
                                         onClick={() => handleDelete(t.id)}
-                                        disabled={isFading}
-                                        title="Delete transaction"
-                                        aria-label={`Delete transaction ${t.description}`}
+                                        className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition flex-shrink-0"
                                     >
-                                        {isFading
-                                            ? <span className="tx-mini-spinner" />
-                                            : <IconTrash />
-                                        }
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="3 6 5 6 21 6" />
+                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                            <path d="M10 11v6M14 11v6" />
+                                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                                        </svg>
                                     </button>
                                 </li>
-                            )
-                        })}
-                    </ul>
+                            ))}
+                        </ul>
+                    </div>
                 )}
             </div>
         </div>
