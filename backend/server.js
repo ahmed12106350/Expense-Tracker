@@ -3,8 +3,12 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const transactionRoutes = require('./routes/transactions');
+const aiRoutes = require('./routes/ai')
+
 
 const app = express();
+
+app.use('/ai', aiRoutes)
 app.use(cors());
 app.use(express.json());
 
