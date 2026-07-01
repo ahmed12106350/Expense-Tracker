@@ -18,9 +18,21 @@ function Dashboard({ onLogout }) {
         fetchTransactions()
     }, [])
 
-    const handleLogout = () => {
-        localStorage.removeItem('token')
-        navigate('/login')
+    const [analyzing, setAnalyzing] = useState(false)
+    const [insight, setInsight] = useState('')
+
+    const handleAnalyze = async () => {
+        setAnalyzing(true)
+        setInsight('')
+        try {
+            const response = await api.post('/ai/analyze')
+            console.log('AI response:', response.data)
+            setInsight(response.data.insight)
+        } catch (err) {
+            setInsight('Could not analyze spending right now. Try again later.')
+        } finally {
+            setAnalyzing(false)
+        }
     }
 
     const totalIncome = transactions
@@ -95,7 +107,21 @@ function Dashboard({ onLogout }) {
                     >
                         View All Transactions
                     </button>
+                    <button
+                        onClick={handleAnalyze}
+                        disabled={analyzing}
+                        className="px-5 py-2.5 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl border border-gray-200 dark:border-gray-700 transition shadow-sm disabled:opacity-60"
+                    >
+                        {analyzing ? 'Analyzing...' : ' Analyze My Spending'}
+                    </button>
                 </div>
+                {/* AI Insight Card */}
+                {insight && (
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-2xl p-6 mb-8">
+                        <h3 className="font-bold text-indigo-700 dark:text-indigo-300 mb-2"> AI Spending Insight</h3>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{insight}</p>
+                    </div>
+                )}
 
                 {/* Recent Transactions */}
                 <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
