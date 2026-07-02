@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 function Dashboard({ onLogout }) {
     const [transactions, setTransactions] = useState([])
@@ -44,6 +45,18 @@ function Dashboard({ onLogout }) {
         .reduce((sum, t) => sum + parseFloat(t.amount), 0)
 
     const balance = totalIncome - totalExpense
+
+    const chartData = transactions
+        .filter(t => t.type === 'expense')
+        .reduce((acc, t) => {
+            const existing = acc.find(item => item.category === t.category_name)
+            if (existing) {
+                existing.amount += parseFloat(t.amount)
+            } else {
+                acc.push({ category: t.category_name, amount: parseFloat(t.amount) })
+            }
+            return acc
+        }, [])
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
@@ -92,6 +105,31 @@ function Dashboard({ onLogout }) {
                         </p>
                     </div>
                 </div>
+
+                {/* Spending Chart */}
+                {chartData.length > 0 && (
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 mb-8">
+                        <h2 className="font-bold text-gray-900 dark:text-white mb-4">Spending by Category</h2>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                                <Pie
+                                    data={chartData}
+                                    dataKey="amount"
+                                    nameKey="category"
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={100}
+                                    label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
+                                >
+                                    {chartData.map((entry, index) => (
+                                        <Cell key={index} fill={['#6366f1', '#f43f5e', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'][index % 6]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip formatter={(value) => `₹${value.toLocaleString('en-IN')}`} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 mb-8">

@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../db/pool');
 const authMiddleware = require('../middleware/authMiddleware');
+const redis = require('../db/redis');
 const router = express.Router();
 
 // All routes in this file are protected
@@ -8,7 +9,17 @@ router.use(authMiddleware);
 
 // GET all transactions for logged-in user
 router.get('/', async (req, res) => {
+    const cacheKey = `transactions:${req.userId}`
     try {
+        // 1. Check Redis first
+        const cached = await redis.get(cacheKey)
+        if (cached) {
+            console.log('Cache hit for user', req.userId)
+            return res.json(cached)
+        }
+
+        // 2. Nothing in cache — query PostgreSQL
+        console.log('Cache miss for user', req.userId)
         const result = await pool.query(
             `SELECT t.*, c.name as category_name, c.icon as category_icon
        FROM transactions t
@@ -17,6 +28,10 @@ router.get('/', async (req, res) => {
        ORDER BY t.date DESC`,
             [req.userId]
         );
+
+        // 3. Save to Redis (expires in 1 hour)
+        await redis.set(cacheKey, JSON.stringify(result.rows), { ex: 3600 })
+
         res.json(result.rows);
     } catch (err) {
         console.error(err);
@@ -35,6 +50,10 @@ router.post('/', async (req, res) => {
        RETURNING *`,
             [req.userId, amount, category_id, type, description, currency || 'INR', date || new Date()]
         );
+
+        // Invalidate cache so next GET fetches fresh data
+        await redis.del(`transactions:${req.userId}`)
+
         res.status(201).json(result.rows[0]);
     } catch (err) {
         console.error(err);
@@ -54,6 +73,10 @@ router.delete('/:id', async (req, res) => {
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Transaction not found' });
         }
+
+        // Invalidate cache
+        await redis.del(`transactions:${req.userId}`)
+
         res.json({ message: 'Deleted', transaction: result.rows[0] });
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
